@@ -1,0 +1,221 @@
+### Registrar Administrador / Coordinador
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@rescate.org",
+  "password": "admin1234",
+  "nombre": "Coordinador General",
+  "telefono": "3511234567",
+  "rol": "ADMIN"
+}
+
+### Iniciar Sesión (Login)
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@rescate.org",
+  "password": "admin1234"
+}
+
+### Probar ruta protegida de Admin (Reemplazá <TU_TOKEN> con el accessToken que te dio el login/register)
+GET http://localhost:3000/auth/admin-dashboard
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZDlmY2M2My05ZjZmLTQ5N2UtYWJiMC01MjRlYWQzMmNiMjUiLCJlbWFpbCI6ImFkbWluQHJlc2NhdGUub3JnIiwicm9sIjoiQURNSU4iLCJpYXQiOjE3ODg5OTM5NDMsImV4cCI6MTc4OTU5ODc0M30.pQOnbQTsUctJ-I5YRfqiodFmNji33tRAR7xmALpRRM8
+
+### Registrar un nuevo animal (Requiere rol ADMIN)
+POST http://localhost:3000/animals
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZDlmY2M2My05ZjZmLTQ5N2UtYWJiMC01MjRlYWQzMmNiMjUiLCJlbWFpbCI6ImFkbWluQHJlc2NhdGUub3JnIiwicm9sIjoiQURNSU4iLCJpYXQiOjE3ODg5OTUzNTcsImV4cCI6MTc4OTYwMDE1N30.U2k9NDjFRWjlo7gcApgY5jVt1KDBA63ynUenalGwvp0
+Content-Type: application/json
+
+{
+  "nombre": "Milo",
+  "especie": "PERRO",
+  "edadAproxMeses": 18,
+  "tamano": "MEDIANO",
+  "estadoSalud": "Recuperado de desnutrición leve, plan de vacunación al día",
+  "requierePatio": true,
+  "sociablePerros": true,
+  "sociableGatos": false,
+  "necesitaMedicacion": false
+}
+
+### Listar todos los animales (Público)
+GET http://localhost:3000/animals
+
+### 1. Crear Campaña Médica (Requiere ADMIN)
+# Reemplazá <ID_DE_MILO> con el UUID del animal que creamos antes
+POST http://localhost:3000/campaigns
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZDlmY2M2My05ZjZmLTQ5N2UtYWJiMC01MjRlYWQzMmNiMjUiLCJlbWFpbCI6ImFkbWluQHJlc2NhdGUub3JnIiwicm9sIjoiQURNSU4iLCJpYXQiOjE3ODg5OTUzNTcsImV4cCI6MTc4OTYwMDE1N30.U2k9NDjFRWjlo7gcApgY5jVt1KDBA63ynUenalGwvp0
+Content-Type: application/json
+
+{
+  "animalId": "257bc85f-a776-4275-bd92-7d321d69e8e9",
+  "titulo": "Cirugía traumatológica y medicación de Milo",
+  "descripcion": "Intervención quirúrgica en pata trasera y tratamiento postoperatorio.",
+  "montoObjetivo": 150000.00,
+  "facturaUrl": "https://storage.rescate.org/facturas/fac-milo-01.pdf"
+}
+
+### 2. Registrar Donación (Público / Donante)
+# Reemplazá <ID_DE_LA_CAMPANA> con el UUID devuelto en el paso 1
+POST http://localhost:3000/donations
+Content-Type: application/json
+
+{
+  "campanaId": "ae1b3273-af7d-4aad-8179-ba7abf650b09",
+  "monto": 50000.00,
+  "codigoTransaccion": "MP-TRANS-987654321",
+  "comprobanteUrl": "https://storage.rescate.org/comprobantes/comp-001.jpg"
+}
+
+### 3. Aprobar Donación y actualizar monto recaudado (Requiere ADMIN)
+# Reemplazá <ID_DE_LA_DONACION> con el UUID generado en el paso 2
+PATCH http://localhost:3000/donations/9744f474-7940-4f94-92ef-15985c384636/status
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZDlmY2M2My05ZjZmLTQ5N2UtYWJiMC01MjRlYWQzMmNiMjUiLCJlbWFpbCI6ImFkbWluQHJlc2NhdGUub3JnIiwicm9sIjoiQURNSU4iLCJpYXQiOjE3ODg5OTUzNTcsImV4cCI6MTc4OTYwMDE1N30.U2k9NDjFRWjlo7gcApgY5jVt1KDBA63ynUenalGwvp0
+Content-Type: application/json
+
+{
+  "estado": "APROBADA"
+}
+
+### 4. Consultar estado final de la campaña
+GET http://localhost:3000/campaigns/ae1b3273-af7d-4aad-8179-ba7abf650b09
+
+### Listar donaciones de la campaña (Requiere ADMIN)
+GET http://localhost:3000/donations/campaign/ae1b3273-af7d-4aad-8179-ba7abf650b09
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZDlmY2M2My05ZjZmLTQ5N2UtYWJiMC01MjRlYWQzMmNiMjUiLCJlbWFpbCI6ImFkbWluQHJlc2NhdGUub3JnIiwicm9sIjoiQURNSU4iLCJpYXQiOjE3ODg5OTUzNTcsImV4cCI6MTc4OTYwMDE1N30.U2k9NDjFRWjlo7gcApgY5jVt1KDBA63ynUenalGwvp0
+
+### 1. Registrar un Voluntario de prueba
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "email": "voluntario.carlos@rescate.org",
+  "password": "carlosPass123",
+  "nombre": "Carlos Gómez",
+  "telefono": "+5493512345678",
+  "rol": "VOLUNTARIO"
+}
+
+### 2. Login del Voluntario (para obtener su token)
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "voluntario.carlos@rescate.org",
+  "password": "carlosPass123"
+}
+
+### 3. Registrar Perfil de Hogar del Voluntario (Usa el token del voluntario)
+POST http://localhost:3000/transits/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjNGRlZDE2MC1lMDRmLTQ1YWMtOGQ3NC03MWVlYjYyOTc2MDkiLCJlbWFpbCI6InZvbHVudGFyaW8uY2FybG9zQHJlc2NhdGUub3JnIiwicm9sIjoiVk9MVU5UQVJJTyIsImlhdCI6MTc4OTA3NzQyMCwiZXhwIjoxNzg5NjgyMjIwfQ.6PO14EABDqwOiJRSmGrKU-fUxQ4TpoP901WUFOmzRkM
+Content-Type: application/json
+
+{
+  "tipoVivienda": "CASA",
+  "tienePatioCerrado": true,
+  "tieneOtrosAnimales": false,
+  "aceptaMedicacion": true,
+  "disponibilidadDias": 60
+}
+
+### 4. Consultar Perfil Propio del Voluntario
+GET http://localhost:3000/transits/profile/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjNGRlZDE2MC1lMDRmLTQ1YWMtOGQ3NC03MWVlYjYyOTc2MDkiLCJlbWFpbCI6InZvbHVudGFyaW8uY2FybG9zQHJlc2NhdGUub3JnIiwicm9sIjoiVk9MVU5UQVJJTyIsImlhdCI6MTc4OTA3NzQyMCwiZXhwIjoxNzg5NjgyMjIwfQ.6PO14EABDqwOiJRSmGrKU-fUxQ4TpoP901WUFOmzRkM
+
+### 5. Asignar Tránsito (Usa el token del ADMIN)
+POST http://localhost:3000/transits/assign
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZDlmY2M2My05ZjZmLTQ5N2UtYWJiMC01MjRlYWQzMmNiMjUiLCJlbWFpbCI6ImFkbWluQHJlc2NhdGUub3JnIiwicm9sIjoiQURNSU4iLCJpYXQiOjE3ODkwNzc1MjIsImV4cCI6MTc4OTY4MjMyMn0.lc82uAZ7HhiEgFVTPMn-A-ho8PHIKHtMqOBiNEG43m0
+Content-Type: application/json
+
+{
+  "animalId": "257bc85f-a776-4275-bd92-7d321d69e8e9",
+  "voluntarioId": "c4ded160-e04f-45ac-8d74-71eeb6297609"
+}
+
+### 6. Listar Tránsitos Activos (Usa el token del ADMIN)
+GET http://localhost:3000/transits/active
+Authorization: Bearer <TOKEN_ADMIN>
+
+### --- ESCENARIO DE PRUEBA: GALE-SHAPLEY ---
+
+### 1. Registrar a Luna (Gata para departamento) - ADMIN
+POST http://localhost:3000/animals
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZDlmY2M2My05ZjZmLTQ5N2UtYWJiMC01MjRlYWQzMmNiMjUiLCJlbWFpbCI6ImFkbWluQHJlc2NhdGUub3JnIiwicm9sIjoiQURNSU4iLCJpYXQiOjE3ODkwNzgwMjMsImV4cCI6MTc4OTY4MjgyM30.k9HdqvH21O4dd3zW-BgV_dY7WAV7EAgt5HxVaHkWC44
+Content-Type: application/json
+
+{
+  "nombre": "Luna",
+  "especie": "GATO",
+  "edadAproxMeses": 12,
+  "tamano": "CHICO",
+  "estadoSalud": "Sana, castrada",
+  "requierePatio": false,
+  "sociablePerros": false,
+  "sociableGatos": true,
+  "necesitaMedicacion": false
+}
+
+### 2. Registrar a Thor (Perro grande con necesidades médicas) - ADMIN
+POST http://localhost:3000/animals
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZDlmY2M2My05ZjZmLTQ5N2UtYWJiMC01MjRlYWQzMmNiMjUiLCJlbWFpbCI6ImFkbWluQHJlc2NhdGUub3JnIiwicm9sIjoiQURNSU4iLCJpYXQiOjE3ODkwNzgwMjMsImV4cCI6MTc4OTY4MjgyM30.k9HdqvH21O4dd3zW-BgV_dY7WAV7EAgt5HxVaHkWC44
+Content-Type: application/json
+
+{
+  "nombre": "Thor",
+  "especie": "PERRO",
+  "edadAproxMeses": 36,
+  "tamano": "GRANDE",
+  "estadoSalud": "Tratamiento por artritis",
+  "requierePatio": true,
+  "sociablePerros": true,
+  "sociableGatos": false,
+  "necesitaMedicacion": true
+}
+
+### 3. Registrar a la voluntaria Sofía
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "email": "sofia.depto@rescate.org",
+  "password": "sofiaPass123",
+  "nombre": "Sofía Depto",
+  "telefono": "+5493519998888",
+  "rol": "VOLUNTARIO"
+}
+
+### 4. Login de Sofía (para obtener su token)
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "sofia.depto@rescate.org",
+  "password": "sofiaPass123"
+}
+
+### 5. Cargar perfil de hogar de Sofía (Departamento, sin patio, sin medicación)
+POST http://localhost:3000/transits/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTM0M2U5Yy1kNTNlLTRmOWItYjY2YS03YzI1NTEyYzI2Y2MiLCJlbWFpbCI6InNvZmlhLmRlcHRvQHJlc2NhdGUub3JnIiwicm9sIjoiVk9MVU5UQVJJTyIsImlhdCI6MTc4OTA3ODA4MiwiZXhwIjoxNzg5NjgyODgyfQ.XOCo5NmSSxdhy6WgIHEPyITUplUBN2a3j_OPHvTu1-Q
+Content-Type: application/json
+
+{
+  "tipoVivienda": "DEPARTAMENTO",
+  "tienePatioCerrado": false,
+  "tieneOtrosAnimales": false,
+  "aceptaMedicacion": false,
+  "disponibilidadDias": 45
+}
+
+### 6. Ejecutar Simulación de Gale-Shapley (Solo ADMIN)
+GET http://localhost:3000/matching/simulate
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZDlmY2M2My05ZjZmLTQ5N2UtYWJiMC01MjRlYWQzMmNiMjUiLCJlbWFpbCI6ImFkbWluQHJlc2NhdGUub3JnIiwicm9sIjoiQURNSU4iLCJpYXQiOjE3ODkwNzgwMjMsImV4cCI6MTc4OTY4MjgyM30.k9HdqvH21O4dd3zW-BgV_dY7WAV7EAgt5HxVaHkWC44
+
+### 7. Aplicar Masivamente las Asignaciones de Gale-Shapley (Solo ADMIN)
+POST http://localhost:3000/matching/apply
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZDlmY2M2My05ZjZmLTQ5N2UtYWJiMC01MjRlYWQzMmNiMjUiLCJlbWFpbCI6ImFkbWluQHJlc2NhdGUub3JnIiwicm9sIjoiQURNSU4iLCJpYXQiOjE3ODkwNzgwMjMsImV4cCI6MTc4OTY4MjgyM30.k9HdqvH21O4dd3zW-BgV_dY7WAV7EAgt5HxVaHkWC44
+
+### 8. Verificar que Luna pasó a estado EN_TRANSITO
+# Reemplazá <ID_DE_LUNA> con el UUID devuelto al crear a Luna
+GET http://localhost:3000/animals/4d5f5b7a-f37f-4237-9f38-3357212c268a

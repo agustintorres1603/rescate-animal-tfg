@@ -1,0 +1,166 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -------------------------------------------------------------
+// ENUMS
+// -------------------------------------------------------------
+
+enum Rol {
+  ADMIN
+  VOLUNTARIO
+  DONANTE
+}
+
+enum Especie {
+  PERRO
+  GATO
+}
+
+enum Tamano {
+  CHICO
+  MEDIANO
+  GRANDE
+}
+
+enum EstadoAnimal {
+  RESCATADO
+  EN_TRANSITO
+  ADOPTADO
+}
+
+enum TipoVivienda {
+  DEPARTAMENTO
+  CASA
+}
+
+enum EstadoCampana {
+  ACTIVA
+  FINALIZADA
+}
+
+enum EstadoDonacion {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+enum EstadoTransito {
+  ACTIVO
+  FINALIZADO
+  CANCELADO
+}
+
+// -------------------------------------------------------------
+// MODELOS
+// -------------------------------------------------------------
+
+model Usuario {
+  id                   String               @id @default(uuid())
+  email                String               @unique
+  passwordHash         String               @map("password_hash")
+  nombre               String
+  telefono             String?
+  rol                  Rol                  @default(DONANTE)
+  resetPasswordToken   String?              @map("reset_password_token")
+  resetPasswordExpires DateTime?            @map("reset_password_expires")
+  createdAt            DateTime             @default(now()) @map("created_at")
+  updatedAt            DateTime             @updatedAt @map("updated_at")
+
+  perfilHogar          PerfilHogar?
+  donaciones           Donacion[]
+  transitos            AsignacionTransito[]
+
+  @@map("usuarios")
+}
+
+model PerfilHogar {
+  id                 String       @id @default(uuid())
+  usuarioId          String       @unique @map("usuario_id")
+  tipoVivienda       TipoVivienda @map("tipo_vivienda")
+  tienePatioCerrado  Boolean      @map("tiene_patio_cerrado")
+  tieneOtrosAnimales Boolean      @map("tiene_otros_animales")
+  aceptaMedicacion   Boolean      @map("acepta_medicacion")
+  disponibilidadDias Int          @map("disponibilidad_dias")
+  activo             Boolean      @default(true)
+  createdAt          DateTime     @default(now()) @map("created_at")
+
+  usuario            Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("perfiles_hogar")
+}
+
+model Animal {
+  id                 String          @id @default(uuid())
+  nombre             String
+  especie            Especie
+  edadAproxMeses     Int             @map("edad_aprox_meses")
+  tamano             Tamano
+  estadoSalud        String          @map("estado_salud")
+  requierePatio      Boolean         @map("requiere_patio")
+  sociablePerros     Boolean         @map("sociable_perros")
+  sociableGatos      Boolean         @map("sociable_gatos")
+  necesitaMedicacion Boolean         @map("necesita_medicacion")
+  estado             EstadoAnimal    @default(RESCATADO)
+  createdAt          DateTime        @default(now()) @map("created_at")
+
+  campanas           CampanaMedica[]
+  transitos          AsignacionTransito[]
+
+  @@map("animales")
+}
+
+model CampanaMedica {
+  id             String         @id @default(uuid())
+  animalId       String         @map("animal_id")
+  titulo         String
+  descripcion    String
+  montoObjetivo  Decimal        @map("monto_objetivo") @db.Decimal(12, 2)
+  montoRecaudado Decimal        @default(0) @map("monto_recaudado") @db.Decimal(12, 2)
+  estado         EstadoCampana  @default(ACTIVA)
+  facturaUrl     String?        @map("factura_url")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  animal         Animal         @relation(fields: [animalId], references: [id], onDelete: Restrict)
+  donaciones     Donacion[]
+
+  @@map("campanas_medicas")
+}
+
+model Donacion {
+  id                String         @id @default(uuid())
+  campanaId         String         @map("campana_id")
+  usuarioId         String?        @map("usuario_id")
+  monto             Decimal        @db.Decimal(12, 2)
+  codigoTransaccion String         @unique @map("codigo_transaccion")
+  comprobanteUrl    String         @map("comprobante_url")
+  estado            EstadoDonacion @default(PENDIENTE)
+  fechaDonacion     DateTime       @default(now()) @map("fecha_donacion")
+  createdAt         DateTime       @default(now()) @map("created_at")
+
+  campana           CampanaMedica  @relation(fields: [campanaId], references: [id], onDelete: Restrict)
+  usuario           Usuario?       @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@map("donaciones")
+}
+
+model AsignacionTransito {
+  id           String         @id @default(uuid())
+  animalId     String         @map("animal_id")
+  voluntarioId String         @map("voluntario_id")
+  fechaInicio  DateTime       @default(now()) @map("fecha_inicio")
+  fechaFin     DateTime?      @map("fecha_fin")
+  estado       EstadoTransito @default(ACTIVO)
+  createdAt    DateTime       @default(now()) @map("created_at")
+
+  animal       Animal         @relation(fields: [animalId], references: [id], onDelete: Restrict)
+  voluntario   Usuario        @relation(fields: [voluntarioId], references: [id], onDelete: Restrict)
+
+  @@map("asignaciones_transito")
+}
